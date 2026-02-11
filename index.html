@@ -1,56 +1,82 @@
-async function loadNews() {
-    const container = document.getElementById("news");
-    container.innerHTML = "Carregando...";
-
-    let allNews = [];
-
-    for (let source of sources) {
-        try {
-            const res = await fetch(
-                `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(source.url)}`
-            );
-
-            const data = await res.json();
-
-            if (!data.items) continue;
-
-            data.items.forEach(item => {
-                if (!item.pubDate) return;
-
-                allNews.push({
-                    title: item.title,
-                    link: item.link,
-                    date: new Date(item.pubDate),
-                    source: source.name
-                });
-            });
-
-        } catch (error) {
-            console.log("Erro no feed:", source.name);
-        }
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Monitor Jurídico</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      margin: 20px;
     }
+    h1 {
+      color: #003366;
+    }
+    .controls {
+      margin-bottom: 20px;
+    }
+    button {
+      padding: 8px 15px;
+      background: #003366;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    .news-item {
+      background: white;
+      padding: 10px;
+      margin-bottom: 10px;
+      border-left: 4px solid #003366;
+    }
+    .source {
+      font-weight: bold;
+      color: #003366;
+    }
+  </style>
+</head>
+<body>
 
-    // Filtro de datas
+<h1>Monitor Jurídico</h1>
+
+<div class="controls">
+  Data início:
+  <input type="date" id="startDate">
+  Data fim:
+  <input type="date" id="endDate">
+  <button onclick="loadNews()">Atualizar</button>
+</div>
+
+<div id="news">Clique em atualizar para carregar as notícias.</div>
+
+<script>
+async function loadNews() {
+  const container = document.getElementById("news");
+  container.innerHTML = "Carregando...";
+
+  try {
+    const res = await fetch("/api/news");
+    const data = await res.json();
+
+    let allNews = data.map(item => ({
+      ...item,
+      date: new Date(item.date)
+    }));
+
     const startDate = document.getElementById("startDate").value;
     const endDate = document.getElementById("endDate").value;
 
     if (startDate && endDate) {
-        const start = new Date(startDate);
-        const end = new Date(endDate);
-
-        allNews = allNews.filter(n => n.date >= start && n.date <= end);
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      allNews = allNews.filter(n => n.date >= start && n.date <= end);
     }
 
-    // Ordenar por data
     allNews.sort((a, b) => b.date - a.date);
 
-    // Mostrar
     container.innerHTML = "";
 
     allNews.forEach(n => {
-        container.innerHTML += `
-            <div style="margin-bottom:15px;">
-                <strong>${n.source}</strong><br>
-                <a href="${n.link}" target="_blank">${n.title}</a><br>
-                <small>${n.date.toLocaleDateString()}</small>
-            </div
+      container.innerHTML += `
+        <div class="news-item">
+          <div class="source">${n.source}</div>
+          <a href="${
