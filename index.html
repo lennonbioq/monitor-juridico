@@ -43,7 +43,7 @@
   <input type="date" id="startDate">
   Data fim:
   <input type="date" id="endDate">
-  <button onclick="loadNews()">Atualizar</button>
+  <button id="btnAtualizar">Atualizar</button>
 </div>
 
 <div id="news">Clique em atualizar para carregar as notícias.</div>
@@ -79,4 +79,17 @@ async function loadNews() {
       container.innerHTML += `
         <div class="news-item">
           <div class="source">${n.source}</div>
-          <a href="${
+          <a href="${n.link}" target="_blank">${n.title}</a>
+          <div>${n.date.toLocaleDateString()}</div>
+        </div>
+      `;
+    });
+
+  } catch (error) {
+    container.innerHTML = "Erro ao carregar notícias.";
+  }
+}
+
+document.getElementById("btnAtualizar").addEventListener("click", loadNews);
+</script>
+
