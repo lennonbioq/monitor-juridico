@@ -57,10 +57,18 @@ async function loadNews() {
     const res = await fetch("/api/news");
     const data = await res.json();
 
-    let allNews = data.map(item => ({
-      ...item,
-      date: new Date(item.date)
-    }));
+    let allNews = data.map(item => {
+      let parsedDate = new Date(item.date);
+
+      if (isNaN(parsedDate)) {
+        parsedDate = new Date(item.pubDate || item.published || Date.now());
+      }
+
+      return {
+        ...item,
+        date: parsedDate
+      };
+    });
 
     const startDate = document.getElementById("startDate").value;
     const endDate = document.getElementById("endDate").value;
@@ -68,7 +76,14 @@ async function loadNews() {
     if (startDate && endDate) {
       const start = new Date(startDate);
       const end = new Date(endDate);
-      allNews = allNews.filter(n => n.date >= start && n.date <= end);
+      end.setHours(23, 59, 59, 999);
+
+      allNews = allNews.filter(n => {
+        return n.date instanceof Date &&
+               !isNaN(n.date) &&
+               n.date >= start &&
+               n.date <= end;
+      });
     }
 
     allNews.sort((a, b) => b.date - a.date);
@@ -85,6 +100,10 @@ async function loadNews() {
       `;
     });
 
+    if (allNews.length === 0) {
+      container.innerHTML = "Nenhuma notícia encontrada nesse período.";
+    }
+
   } catch (error) {
     container.innerHTML = "Erro ao carregar notícias.";
   }
@@ -93,3 +112,5 @@ async function loadNews() {
 document.getElementById("btnAtualizar").addEventListener("click", loadNews);
 </script>
 
+</body>
+</html>
