@@ -1,8 +1,12 @@
 export default async function handler(req, res) {
   const sources = [
-    "https://www.in.gov.br/rss/-/asset_publisher/Kujrw0TZC2Mb/content/id/684900353",
-    "https://www.jusbrasil.com.br/noticias/rss",
-    "https://www.conjur.com.br/rss.xml"
+    { name: "STF", url: "https://www.stf.jus.br/portal/rss/noticiaRss.asp" },
+    { name: "STJ", url: "https://www.stj.jus.br/sites/portalp/RSS" },
+    { name: "TST", url: "https://www.tst.jus.br/rss" },
+    { name: "CNJ", url: "https://www.cnj.jus.br/feed/" },
+    { name: "Agência Brasil", url: "https://agenciabrasil.ebc.com.br/rss/justica" },
+    { name: "Conjur", url: "https://www.conjur.com.br/rss.xml" },
+    { name: "Migalhas", url: "https://www.migalhas.com.br/rss" }
   ];
 
   let allNews = [];
@@ -10,18 +14,26 @@ export default async function handler(req, res) {
   for (let source of sources) {
     try {
       const response = await fetch(
-        `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(source)}`
+        `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(source.url)}`
       );
       const data = await response.json();
-      if (data.items) {
-        allNews = allNews.concat(data.items);
-      }
+
+      if (!data.items) continue;
+
+      data.items.forEach(item => {
+        if (!item.pubDate) return;
+
+        allNews.push({
+          title: item.title,
+          link: item.link,
+          date: item.pubDate,
+          source: source.name
+        });
+      });
     } catch (error) {
-      console.log("Erro na fonte:", source);
+      console.log("Erro no feed:", source.name);
     }
   }
 
-  allNews.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
-
-  res.status(200).json(allNews.slice(0, 50));
+  res.status(200).json(allNews);
 }
