@@ -1,13 +1,22 @@
 export default async function handler(req, res) {
   const sources = [
-    { name: "STF", url: "https://www.stf.jus.br/portal/rss/noticiaRss.asp" },
-    { name: "STJ", url: "https://www.stj.jus.br/sites/portalp/RSS" },
+
+    // TRIBUNAIS
     { name: "TST", url: "https://www.tst.jus.br/rss" },
     { name: "CNJ", url: "https://www.cnj.jus.br/feed/" },
-    { name: "Conjur", url: "https://www.conjur.com.br/rss.xml" },
+
+    // PORTAIS JURÍDICOS
     { name: "JOTA", url: "https://www.jota.info/feed" },
+    { name: "Conjur", url: "https://www.conjur.com.br/rss.xml" },
+    { name: "Migalhas", url: "https://www.migalhas.com.br/rss" },
+
+    // NOTÍCIAS GERAIS
     { name: "Agência Brasil", url: "https://agenciabrasil.ebc.com.br/rss/justica" },
-    { name: "G1 Política", url: "https://g1.globo.com/rss/g1/politica/" }
+    { name: "G1 Política", url: "https://g1.globo.com/rss/g1/politica/" },
+    { name: "UOL Política", url: "https://rss.uol.com.br/feed/politica.xml" },
+    { name: "Poder360", url: "https://www.poder360.com.br/feed/" },
+    { name: "CNN Brasil Política", url: "https://www.cnnbrasil.com.br/politica/feed/" }
+
   ];
 
   let allNews = [];
@@ -39,5 +48,5 @@ export default async function handler(req, res) {
   // ordenar por data
   allNews.sort((a, b) => new Date(b.date) - new Date(a.date));
 
-  res.status(200).json(allNews.slice(0, 100));
+  res.status(200).json(allNews.slice(0, 200));
 }
