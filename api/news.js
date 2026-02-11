@@ -1,13 +1,14 @@
 export default async function handler(req, res) {
   const sources = [
-  { name: "TST", url: "https://www.tst.jus.br/rss" },
-  { name: "CNJ", url: "https://www.cnj.jus.br/feed/" },
-  { name: "Conjur", url: "https://www.conjur.com.br/rss.xml" },
-  { name: "Agência Brasil", url: "https://agenciabrasil.ebc.com.br/rss/justica" },
-  { name: "G1 Política", url: "https://g1.globo.com/rss/g1/politica/" },
-  { name: "Jota", url: "https://www.jota.info/feed" }
-];
-
+    { name: "STF", url: "https://www.stf.jus.br/portal/rss/noticiaRss.asp" },
+    { name: "STJ", url: "https://www.stj.jus.br/sites/portalp/RSS" },
+    { name: "TST", url: "https://www.tst.jus.br/rss" },
+    { name: "CNJ", url: "https://www.cnj.jus.br/feed/" },
+    { name: "Conjur", url: "https://www.conjur.com.br/rss.xml" },
+    { name: "JOTA", url: "https://www.jota.info/feed" },
+    { name: "Agência Brasil", url: "https://agenciabrasil.ebc.com.br/rss/justica" },
+    { name: "G1 Política", url: "https://g1.globo.com/rss/g1/politica/" }
+  ];
 
   let allNews = [];
 
@@ -35,5 +36,8 @@ export default async function handler(req, res) {
     }
   }
 
-  res.status(200).json(allNews);
+  // ordenar por data
+  allNews.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+  res.status(200).json(allNews.slice(0, 100));
 }
