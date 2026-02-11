@@ -1,126 +1,56 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-<meta charset="UTF-8">
-<title>Monitor Jurídico – SURET</title>
-<style>
-body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    background: #f4f6f8;
-}
-
-header {
-    background: #003A8F;
-    color: white;
-    padding: 15px 20px;
-    font-size: 20px;
-    font-weight: bold;
-}
-
-.controls {
-    background: white;
-    padding: 15px;
-    display: flex;
-    gap: 10px;
-    align-items: center;
-    border-bottom: 1px solid #ddd;
-}
-
-button {
-    background: #003A8F;
-    color: white;
-    border: none;
-    padding: 8px 15px;
-    cursor: pointer;
-}
-
-.container {
-    padding: 20px;
-}
-
-.card {
-    background: white;
-    padding: 15px;
-    margin-bottom: 10px;
-    border-left: 5px solid #003A8F;
-}
-
-.card a {
-    text-decoration: none;
-    color: #003A8F;
-    font-weight: bold;
-}
-</style>
-</head>
-<body>
-
-<header>Monitor Jurídico – SURET</header>
-
-<div class="controls">
-    Data inicial:
-    <input type="date" id="startDate">
-    Data final:
-    <input type="date" id="endDate">
-    <button onclick="loadNews()">Atualizar</button>
-</div>
-
-<div class="container" id="news"></div>
-
-<script>
-const feeds = [
-"https://api.rss2json.com/v1/api.json?rss_url=https://www.migalhas.com.br/rss",
-"https://api.rss2json.com/v1/api.json?rss_url=https://www.conjur.com.br/rss.xml",
-"https://api.rss2json.com/v1/api.json?rss_url=https://g1.globo.com/rss/g1/economia/",
-"https://api.rss2json.com/v1/api.json?rss_url=https://www.stf.jus.br/portal/rss/noticiaRss.asp",
-"https://api.rss2json.com/v1/api.json?rss_url=https://www.stj.jus.br/sites/portalp/rss/noticias.xml"
-];
-
 async function loadNews() {
     const container = document.getElementById("news");
     container.innerHTML = "Carregando...";
 
-    const start = document.getElementById("startDate").value;
-    const end = document.getElementById("endDate").value;
-
     let allNews = [];
 
-    for (let feed of feeds) {
+    for (let source of sources) {
         try {
-            const res = await fetch(feed);
+            const res = await fetch(
+                `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(source.url)}`
+            );
+
             const data = await res.json();
-            allNews = allNews.concat(data.items);
-        } catch (e) {
-            console.log("Erro no feed:", feed);
+
+            if (!data.items) continue;
+
+            data.items.forEach(item => {
+                if (!item.pubDate) return;
+
+                allNews.push({
+                    title: item.title,
+                    link: item.link,
+                    date: new Date(item.pubDate),
+                    source: source.name
+                });
+            });
+
+        } catch (error) {
+            console.log("Erro no feed:", source.name);
         }
     }
 
-    if (start || end) {
-        allNews = allNews.filter(item => {
-            const date = new Date(item.pubDate);
-            if (start && date < new Date(start)) return false;
-            if (end && date > new Date(end)) return false;
-            return true;
-        });
+    // Filtro de datas
+    const startDate = document.getElementById("startDate").value;
+    const endDate = document.getElementById("endDate").value;
+
+    if (startDate && endDate) {
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+
+        allNews = allNews.filter(n => n.date >= start && n.date <= end);
     }
 
-    allNews.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
+    // Ordenar por data
+    allNews.sort((a, b) => b.date - a.date);
 
+    // Mostrar
     container.innerHTML = "";
 
-    allNews.slice(0, 50).forEach(item => {
-        const div = document.createElement("div");
-        div.className = "card";
-        div.innerHTML = `
-            <div>${new Date(item.pubDate).toLocaleDateString()}</div>
-            <a href="${item.link}" target="_blank">${item.title}</a>
-        `;
-        container.appendChild(div);
-    });
-}
-
-loadNews();
-</script>
-
-</body>
-</html>
+    allNews.forEach(n => {
+        container.innerHTML += `
+            <div style="margin-bottom:15px;">
+                <strong>${n.source}</strong><br>
+                <a href="${n.link}" target="_blank">${n.title}</a><br>
+                <small>${n.date.toLocaleDateString()}</small>
+            </div
